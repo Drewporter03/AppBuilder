@@ -15,7 +15,7 @@ export async function getProjectById(req, res) {
   try {
     const project = await Project.findById(req.params.id);
     if (!project) return res.status(404).json({ message: "Project not found" });
-    return res.status(200).json({ project });
+    res.status(200).json({ project });
   } catch (error) {
     console.error("Error in getProjectById Controller", error);
     res.status(500).json({ message: "Internal Server Error" });
@@ -52,9 +52,7 @@ export async function updateProject(req, res) {
       project.entities = extracted?.entities ?? project.entities;
       project.roles = extracted?.roles ?? project.roles;
       project.features = extracted?.features ?? project.features;
-
       project.title = extracted?.appName ?? title ?? project.title;
-
       project.prompt = prompt;
     } else {
       if (typeof title === "string") project.title = title;
@@ -62,10 +60,10 @@ export async function updateProject(req, res) {
     }
 
     await project.save();
-    return res.status(200).json(project);
+    res.status(200).json(project);
   } catch (error) {
     console.error("Error in updateProject", error);
-    return res.status(500).json({ error: "Failed to update project" });
+    res.status(500).json({ error: "Failed to update project" });
   }
 }
 
@@ -73,8 +71,8 @@ export async function deleteProject(req, res) {
   try {
     const deletedProject = await Project.findByIdAndDelete(req.params.id);
     if (!deletedProject)
-      return res.status(404).json({ message: "Note not found" });
-    res.status(200).json({ message: "note deleted", deletedProject });
+      return res.status(404).json({ message: "Project not found" });
+    res.status(200).json({ message: "Project deleted", deletedProject });
   } catch (error) {
     console.error("Error in deleteProject Controller", error);
     res.status(500).json({ message: "Internal Server Error" });
@@ -154,9 +152,7 @@ export async function captureRequirements(req, res) {
   try {
     const extracted = await extractRequirements(description);
     const uiMockup = await generateUIMockup(description);
-
-    const projectTitle =
-      extracted && extracted.appName ? extracted.appName : "Untitled Project";
+    const projectTitle = extracted?.appName || "Untitled Project";
 
     const newProject = new Project({
       title: projectTitle,
@@ -182,11 +178,10 @@ export async function updateUIMockup(req, res) {
     const uiMockup = await generateUIMockup(project.prompt);
     project.uiMockup = uiMockup;
     await project.save();
-
-    return res.status(200).json(project);
+    res.status(200).json(project);
   } catch (error) {
     console.error("Error in updateUIMockup", error);
-    return res.status(500).json({ error: "Failed to update UI mockup" });
+    res.status(500).json({ error: "Failed to update UI mockup" });
   }
 }
 
@@ -205,10 +200,10 @@ export async function downloadUIMockup(req, res) {
 
     res.setHeader("Content-Type", "text/html; charset=utf-8");
     res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
-    return res.send(project.uiMockup);
+    res.send(project.uiMockup);
   } catch (error) {
     console.error("Error in downloadUIMockup", error);
-    return res.status(500).json({ error: "Failed to download UI mockup" });
+    res.status(500).json({ error: "Failed to download UI mockup" });
   }
 }
 
@@ -230,7 +225,7 @@ Example:
     stream: false,
   });
 
-  const content = chatCompletion.choices?.[0]?.message?.content?.trim() ?? "{}";
+  const content = chatCompletion.choices?.[0]?.message?.content?.trim() || "{}";
 
   try {
     const parsed = JSON.parse(content);
@@ -254,11 +249,6 @@ Example:
     };
   } catch (err) {
     console.error("Failed to parse extracted requirements JSON:", content, err);
-    return {
-      appName: "",
-      entities: [],
-      roles: [],
-      features: [],
-    };
+    return { appName: "", entities: [], roles: [], features: [] };
   }
 }

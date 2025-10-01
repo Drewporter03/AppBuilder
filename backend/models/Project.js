@@ -9,11 +9,27 @@ const projectSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    appName: String,
-    entities: [String],
-    roles: [String],
-    features: [String],
-    uiMockup: String,
+    appName: {
+      type: String,
+    },
+    entities: [
+      {
+        type: String,
+      },
+    ],
+    roles: [
+      {
+        type: String,
+      },
+    ],
+    features: [
+      {
+        type: String,
+      },
+    ],
+    uiMockup: {
+      type: String,
+    },
   },
   { timestamps: true }
 );
