@@ -1,42 +1,40 @@
-import Project from "../../models/Project.js"
-import { Groq } from 'groq-sdk';
+import Project from "../../models/Project.js";
+import { Groq } from "groq-sdk";
 
-
-export async function getAllProjects (_,res){
-    try{
-        const projects  = await Project.find().sort({createdAt:-1})
-        res.status(200).json(projects)
-    }catch(error){
-        console.error("Error in getAllProjects Controller", error)
-        res.status(500).json({message: "Internal Server Error"})
-    }
+export async function getAllProjects(_, res) {
+  try {
+    const projects = await Project.find().sort({ createdAt: -1 });
+    res.status(200).json(projects);
+  } catch (error) {
+    console.error("Error in getAllProjects Controller", error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
 }
 
-export async function getProjectById (req,res){
-    try{
-        const project  = await Project.findById(req.params.id)
-        if (!project) return res.status(404).json({message:"Project not found"});
-        return res.status(200).json({project})
-    }catch(error){
-        console.error("Error in getProjectById Controller", error)
-        res.status(500).json({message: "Internal Server Error"})
-    }
+export async function getProjectById(req, res) {
+  try {
+    const project = await Project.findById(req.params.id);
+    if (!project) return res.status(404).json({ message: "Project not found" });
+    return res.status(200).json({ project });
+  } catch (error) {
+    console.error("Error in getProjectById Controller", error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
 }
 
-
-export async function createProject (req,res){
-    try{
-        const {title, prompt} = req.body
-        const project = new Project({ title, prompt });
-        const savedProject = await project.save() 
-        res.status(201).json({savedProject})
-    }catch(error){
-        console.error("Error in createProject Controller", error)
-        res.status(500).json({message: "Internal Server Error"})
-    }
+export async function createProject(req, res) {
+  try {
+    const { title, prompt } = req.body;
+    const project = new Project({ title, prompt });
+    const savedProject = await project.save();
+    res.status(201).json({ savedProject });
+  } catch (error) {
+    console.error("Error in createProject Controller", error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
 }
 
-export async function updateProject (req, res) {
+export async function updateProject(req, res) {
   const { id } = req.params;
   const { title, prompt } = req.body;
 
@@ -44,7 +42,11 @@ export async function updateProject (req, res) {
     const project = await Project.findById(id);
     if (!project) return res.status(404).json({ message: "Project not found" });
 
-    if (typeof prompt === "string" && prompt.trim() && prompt !== project.prompt) {
+    if (
+      typeof prompt === "string" &&
+      prompt.trim() &&
+      prompt !== project.prompt
+    ) {
       const extracted = await extractRequirements(prompt);
       project.appName = extracted?.appName ?? project.appName;
       project.entities = extracted?.entities ?? project.entities;
@@ -67,18 +69,17 @@ export async function updateProject (req, res) {
   }
 }
 
-export async function deleteProject(req,res){
-    try{
-        const deletedProject = await Project.findByIdAndDelete(
-            req.params.id,
-        );
-        if (!deletedProject) return res.status(404).json({message: "Note not found"});
-        res.status(200).json({message: "note deleted", deletedProject})
-    }catch (error){
-        console.error("Error in deleteProject Controller",error)
-        res.status(500).json({message: "Internal Server Error"})
-    }}
-
+export async function deleteProject(req, res) {
+  try {
+    const deletedProject = await Project.findByIdAndDelete(req.params.id);
+    if (!deletedProject)
+      return res.status(404).json({ message: "Note not found" });
+    res.status(200).json({ message: "note deleted", deletedProject });
+  } catch (error) {
+    console.error("Error in deleteProject Controller", error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+}
 
 async function generateUIMockup(userPrompt) {
   const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
@@ -132,20 +133,18 @@ async function generateUIMockup(userPrompt) {
 
 End of system prompt.
 
-`
-
-;
+`;
 
   const chatCompletion = await groq.chat.completions.create({
     messages: [
-      { role: 'system', content: systemPrompt },
-      { role: 'user', content: userPrompt }
+      { role: "system", content: systemPrompt },
+      { role: "user", content: userPrompt },
     ],
-    model: 'openai/gpt-oss-120b', 
+    model: "openai/gpt-oss-120b",
     temperature: 0.7,
     max_completion_tokens: 4096,
     top_p: 1,
-    stream: false
+    stream: false,
   });
   return chatCompletion.choices[0].message.content;
 }
@@ -156,7 +155,8 @@ export async function captureRequirements(req, res) {
     const extracted = await extractRequirements(description);
     const uiMockup = await generateUIMockup(description);
 
-    const projectTitle = (extracted && extracted.appName) ? extracted.appName : "Untitled Project";
+    const projectTitle =
+      extracted && extracted.appName ? extracted.appName : "Untitled Project";
 
     const newProject = new Project({
       title: projectTitle,
@@ -169,7 +169,7 @@ export async function captureRequirements(req, res) {
     res.status(201).json(newProject);
   } catch (error) {
     console.error("Error in captureRequirements", error);
-    res.status(500).json({ error: 'Failed to capture requirements' });
+    res.status(500).json({ error: "Failed to capture requirements" });
   }
 }
 
@@ -195,9 +195,12 @@ export async function downloadUIMockup(req, res) {
   try {
     const project = await Project.findById(id);
     if (!project) return res.status(404).json({ message: "Project not found" });
-    if (!project.uiMockup) return res.status(404).json({ message: "No UI mockup available" });
+    if (!project.uiMockup)
+      return res.status(404).json({ message: "No UI mockup available" });
 
-    const baseName = (project.appName || project.title || "project").toString().trim();
+    const baseName = (project.appName || project.title || "project")
+      .toString()
+      .trim();
     const filename = baseName.replace(/[^\w\-_.]/g, "_") + ".html";
 
     res.setHeader("Content-Type", "text/html; charset=utf-8");
@@ -217,25 +220,37 @@ Example:
 
   const chatCompletion = await groq.chat.completions.create({
     messages: [
-      { role: 'system', content: systemPrompt },
-      { role: 'user', content: userPrompt }
+      { role: "system", content: systemPrompt },
+      { role: "user", content: userPrompt },
     ],
-    model: 'openai/gpt-oss-120b',
+    model: "openai/gpt-oss-120b",
     temperature: 0.0,
     max_completion_tokens: 500,
     top_p: 1,
-    stream: false
+    stream: false,
   });
 
-  const content = chatCompletion.choices?.[0]?.message?.content?.trim() ?? '{}';
+  const content = chatCompletion.choices?.[0]?.message?.content?.trim() ?? "{}";
 
   try {
     const parsed = JSON.parse(content);
     return {
-      appName: parsed.appName ?? parsed.title ?? '',
-      entities: Array.isArray(parsed.entities) ? parsed.entities : (parsed.entities ? [parsed.entities] : []),
-      roles: Array.isArray(parsed.roles) ? parsed.roles : (parsed.roles ? [parsed.roles] : []),
-      features: Array.isArray(parsed.features) ? parsed.features : (parsed.features ? [parsed.features] : [])
+      appName: parsed.appName ?? parsed.title ?? "",
+      entities: Array.isArray(parsed.entities)
+        ? parsed.entities
+        : parsed.entities
+          ? [parsed.entities]
+          : [],
+      roles: Array.isArray(parsed.roles)
+        ? parsed.roles
+        : parsed.roles
+          ? [parsed.roles]
+          : [],
+      features: Array.isArray(parsed.features)
+        ? parsed.features
+        : parsed.features
+          ? [parsed.features]
+          : [],
     };
   } catch (err) {
     console.error("Failed to parse extracted requirements JSON:", content, err);
@@ -243,10 +258,7 @@ Example:
       appName: "",
       entities: [],
       roles: [],
-      features: []
+      features: [],
     };
   }
 }
-
-
-
