@@ -4,7 +4,7 @@
   "description": "Mini AI AppBuilder Portal + User App UI",
   "main": "index.js",
   "scripts": {
-    "build": "npm install --prefix backend && npm install --prefix frontend && npm run build --prefix frontend", 
+    "build": "npm install --prefix backend && npm install --prefix frontend && npm run build --prefix frontend",
     "start": "npm run start --prefix backend"
   },
   "repository": {
@@ -18,5 +18,8 @@
   "bugs": {
     "url": "https://github.com/Drewporter03/DecodedAI/issues"
   },
-  "homepage": "https://github.com/Drewporter03/DecodedAI#readme"
+  "homepage": "https://github.com/Drewporter03/DecodedAI#readme",
+  "dependencies": {
+    "dotenv": "^17.2.3"
+  }
 }
