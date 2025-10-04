@@ -1,4 +1,5 @@
-# DecodedAI - AppBuilder
+# AppBuilder - Decoded Technical
+
 AI powered AppBuilder Portal
 
 ## Features
